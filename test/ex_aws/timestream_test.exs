@@ -9,6 +9,7 @@ defmodule ExAws.TimestreamTest do
   alias ExAws.Timestream.Write.{
     Dimension,
     Record,
+    RetentionProperties,
     Tag
   }
 
@@ -111,15 +112,10 @@ defmodule ExAws.TimestreamTest do
     end
 
     test "#create_table/3" do
-      retention_properties = %{
-        magnetic_retention: "magnetic_retention",
-        memory_retention: "memory_retention"
-      }
-
       op =
         Timestream.create_table("database_name", "table_name",
           tags: [Tag.new("foo", "bar")],
-          retention_properties: retention_properties
+          retention_properties: RetentionProperties.new(1, 2)
         )
 
       assert Enum.sort(op.endpoint_operation.headers) == describe_endpoint_headers()
@@ -127,8 +123,8 @@ defmodule ExAws.TimestreamTest do
       assert op.request_operation.data == %{
                "DatabaseName" => "database_name",
                "RetentionProperties" => %{
-                 "MagneticStoreRetentionPeriodInDays" => "magnetic_retention",
-                 "MemoryStoreRetentionPeriodInHours" => "memory_retention"
+                 "MagneticStoreRetentionPeriodInDays" => 1,
+                 "MemoryStoreRetentionPeriodInHours" => 2
                },
                "TableName" => "table_name",
                "Tags" => [%{"Key" => "foo", "Value" => "bar"}]
@@ -187,12 +183,7 @@ defmodule ExAws.TimestreamTest do
     end
 
     test "#update_table/3" do
-      retention_properties = %{
-        magnetic_retention: "magnetic_retention",
-        memory_retention: "memory_retention"
-      }
-
-      op = Timestream.update_table("database_name", "table_name", retention_properties)
+      op = Timestream.update_table("database_name", "table_name", RetentionProperties.new(1, 2))
 
       assert Enum.sort(op.endpoint_operation.headers) == describe_endpoint_headers()
 
@@ -200,8 +191,8 @@ defmodule ExAws.TimestreamTest do
                %{
                  "DatabaseName" => "database_name",
                  "RetentionProperties" => %{
-                   "MagneticStoreRetentionPeriodInDays" => "magnetic_retention",
-                   "MemoryStoreRetentionPeriodInHours" => "memory_retention"
+                   "MagneticStoreRetentionPeriodInDays" => 1,
+                   "MemoryStoreRetentionPeriodInHours" => 2
                  },
                  "TableName" => "table_name"
                }

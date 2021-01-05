@@ -2,6 +2,12 @@ defmodule ExAws.Timestream.Write do
   import ExAws.Utils, only: [camelize_keys: 2]
   @namespace "Timestream_20181101"
 
+  alias ExAws.Timestream.Write.{
+    Record,
+    RetentionProperties,
+    Tag
+  }
+
   @moduledoc """
   The following actions are supported by Amazon Timestream Write.
   https://docs.aws.amazon.com/timestream/latest/developerguide/API_Operations_Amazon_Timestream_Write.html
@@ -10,22 +16,17 @@ defmodule ExAws.Timestream.Write do
   @type database_name :: binary
   @type table_name :: binary
 
-  @type tag :: ExAws.Timestream.Write.Tag.t()
+  @type tag :: Tag.t()
   @type tags :: list(tag)
 
-  @type retention_properties :: %{
-          magnetic_retention: pos_integer,
-          memory_retention: pos_integer
-        }
+  @type retention_properties :: RetentionProperties.t()
 
   @type resource_arn :: binary
-  @type record :: %ExAws.Timestream.Write.Record{}
+  @type record :: Record.t()
 
   @doc "DescribeEndpoints returns a list of available endpoints to make Timestream API calls against"
   @spec describe_endpoints() :: ExAws.Operation.JSON.t()
-  def describe_endpoints do
-    endpoint_operation()
-  end
+  def describe_endpoints, do: endpoint_operation()
 
   ## Amazon Timestream Write : Database
   ######################
@@ -53,7 +54,7 @@ defmodule ExAws.Timestream.Write do
         ]
   @spec create_database(database_name :: database_name) :: ExAws.Operation.EndpointDiscovery.t()
   @spec create_database(database_name :: database_name, opts :: create_database_opts) ::
-          ExAws.Operation.JSON.t()
+          ExAws.Operation.EndpointDiscovery.t()
   def create_database(database_name, opts \\ []) do
     request(:create_database, %{
       "DatabaseName" => database_name,
@@ -65,7 +66,7 @@ defmodule ExAws.Timestream.Write do
 
   defp build_tags(tags) do
     tags
-    |> Enum.map(fn %ExAws.Timestream.Write.Tag{key: key, value: value} ->
+    |> Enum.map(fn %Tag{key: key, value: value} ->
       %{
         "Key" => key,
         "Value" => value
@@ -105,7 +106,7 @@ defmodule ExAws.Timestream.Write do
 
   @doc "Modifies the KMS key for an existing database."
   @spec update_database(database_name :: database_name, km_key_id :: pos_integer) ::
-          ExAws.Operation.JSON.t()
+          ExAws.Operation.EndpointDiscovery.t()
   def update_database(database_name, km_key_id) do
     request(:update_database, %{
       "DatabaseName" => database_name,
@@ -132,7 +133,7 @@ defmodule ExAws.Timestream.Write do
   ## Examples - create_table/3 
 
       tag = ExAws.Timestream.Write.Tag.new("tag_key", "tag_value")
-      retention_properties = %{ magnetic_retention: 1, memory_retention: 1 }
+      retention_properties = ExAws.Timestream.Write.RetentionProperties.new(1, 4)
       ExAws.Timestream.Write.create_table("database_name", "table_name",
         retention_properties: retention_properties, tags: [tag])
   """
@@ -141,7 +142,7 @@ defmodule ExAws.Timestream.Write do
           | {:retention_properties, retention_properties}
         ]
   @spec create_table(database_name :: database_name, table_name :: table_name) ::
-          ExAws.Operation.JSON.t()
+          ExAws.Operation.EndpointDiscovery.t()
   @spec create_table(
           database_name :: database_name,
           table_name :: table_name,
@@ -160,19 +161,19 @@ defmodule ExAws.Timestream.Write do
 
   defp build_retention_properties(retention_properties) when is_nil(retention_properties), do: nil
 
-  defp build_retention_properties(%{
-         magnetic_retention: magnetic_retention,
-         memory_retention: memory_retention
+  defp build_retention_properties(%RetentionProperties{
+         magnetic_store: magnetic_store,
+         memory_store: memory_store
        }) do
     %{
-      "MagneticStoreRetentionPeriodInDays" => magnetic_retention,
-      "MemoryStoreRetentionPeriodInHours" => memory_retention
+      "MagneticStoreRetentionPeriodInDays" => magnetic_store,
+      "MemoryStoreRetentionPeriodInHours" => memory_store
     }
   end
 
   @doc "Deletes a given Timestream table."
   @spec delete_table(database_name :: database_name, km_key_id :: table_name) ::
-          ExAws.Operation.JSON.t()
+          ExAws.Operation.EndpointDiscovery.t()
   def delete_table(database_name, table_name) do
     request(:delete_table, %{
       "DatabaseName" => database_name,
@@ -183,7 +184,7 @@ defmodule ExAws.Timestream.Write do
 
   @doc "Returns information about the table."
   @spec describe_table(database_name :: database_name, km_key_id :: table_name) ::
-          ExAws.Operation.JSON.t()
+          ExAws.Operation.EndpointDiscovery.t()
   def describe_table(database_name, table_name) do
     request(:describe_table, %{
       "DatabaseName" => database_name,
@@ -259,7 +260,7 @@ defmodule ExAws.Timestream.Write do
 
   @doc "Removes the association of tags from a Timestream resource."
   @spec untag_resource(resource_arn :: resource_arn, tag_keys :: [binary]) ::
-          ExAws.Operation.JSON.t()
+          ExAws.Operation.EndpointDiscovery.t()
   def untag_resource(resource_arn, tag_keys) do
     request(:untag_resource, %{
       "ResourceARN" => resource_arn,
