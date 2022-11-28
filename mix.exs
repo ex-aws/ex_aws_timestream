@@ -10,13 +10,16 @@ defmodule ExAws.Timestream.MixProject do
     [
       app: :ex_aws_timestream,
       version: @version,
-      elixir: "~> 1.8",
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: @name,
       description: description(),
       package: package(),
-      docs: [main: @name, source_ref: "v#{@version}", source_url: @url]
+      docs: [main: @name, source_ref: "v#{@version}", source_url: @url],
+      dialyzer: [
+        plt_add_apps: [:ex_unit]
+      ]
     ]
   end
 
@@ -44,11 +47,12 @@ defmodule ExAws.Timestream.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev},
-      {:jason, ">= 0.0.0", only: [:dev, :test]},
       {:hackney, ">= 0.0.0", only: [:dev, :test]},
+      {:jason, ">= 0.0.0", only: [:dev, :test]},
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       ex_aws()
     ]
   end
